@@ -45,9 +45,10 @@
 --- Update script [[
 
     -- Variables
-    local g_script_local_version = '90.12.531'
-    local g_script_current_version = nil
-    local g_script_has_new_verion = false
+    g_script_local_version = '0.1.098'
+    g_script_current_version = nil
+    g_script_has_new_verion = false
+    g_finished_asynchronous_init = false
 
     -- Process
     -- Get up to date version number
@@ -61,7 +62,7 @@
 
         while (true) do
             util.yield()
-            
+
             if (string.sub(small_body, while_counter, while_counter) == '\'') then
                 break
             end
@@ -71,17 +72,27 @@
         end
 
         g_script_current_version = string.sub(small_body, string_start_index, string_end_index)
-        util.log('#649, g_script_current_version == ' .. tostring(g_script_current_version)) -- TEMP
 
-        if (g_script_local_version == g_script_current_version) then return end
+        if (g_script_local_version == g_script_current_version) then 
+            g_finished_asynchronous_init = true 
+            return 
+        end
 
         -- Here there's a new version
         g_script_has_new_verion = true
-        functions.notification('[ JPSCRIPT ]\nThere\'s a new version available.\nUpdate the script to get the newest version.', 1)
+        g_finished_asynchronous_init = true 
+        util.toast('[ JPEDITOR ]\nThere\'s a new version available.\nUpdate the script to get the newest version.')
+        util.log('[ JPEDITOR ] There\'s a new version available. Update the script to get the newest version.')
+        return
     end)
 
     -- Dispatch
     async_http.dispatch()
+
+    -- Loop here while asynchronous http init
+    repeat 
+        util.yield()
+    until g_finished_asynchronous_init
 
 --- ]]
 
@@ -193,15 +204,18 @@
         function (param_click_type, param_effective_issuer) 
             async_http.init('raw.githubusercontent.com','/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
                 if select(2, load(p_body)) then
-                    util.toast('Script failed to download. Please try again later. If this continues to happen then manually update via github.') 
+                    functions.notification('[ JPEDITOR ]\nScript download has failed.\nPlease try again later.\nIf this continues to happen then manually update via github.', 3, '[ JPEDITOR ] Script download has failed. Please try again later. If this continues to happen then manually update via github.') 
                     return
                 end
+
                 local file = io.open(filesystem.scripts_dir() .. SCRIPT_RELPATH, 'wb')
                 file:write(p_body)
                 file:close()
-                util.toast('Successfully updated JPEditor. Restarting Script... :)')
+
+                functions.notification('[ JPEDITOR ]\nSuccessfully updated.\nRestarting script...', 3, '[ JPEDITOR ] Successfully updated.') 
                 util.restart_script()
             end)
+
             -- Dispatch
             async_http.dispatch()
         end)
