@@ -42,40 +42,83 @@
 
 --]]
 
---- Script helpers [[
+--- Update script [[
 
-    -- Required utils
-    util.require_natives('1663599433')
+    -- Variables
+    local script_local_version = '90.12.300'
+    local script_current_version
 
-    -- Updater #JinxScript
-    local response = false
-    local localVer = '3.1'
-    local currentVer
+    -- Process
+    -- Get up to date version number
+    async_http.init('raw.githubusercontent.com', '/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
 
-    async_http.init("raw.githubusercontent.com", "/Oraite/JPEditor/main/JPEditor.lua", 
-    function (output) 
-        --currentVer = tonumber(output)
-        util.log(output)
+        -- Get current version in github script
+        local string_start_index = 0
+        local string_end_index = 0
 
-        -- string.sub("Hello Lua user", 7)      -- from character 7 including 7 until the end
-        -- Lua user
+        local found_string_start_index = string.find(p_body, 'script_local_version = \'')
+        local found_string_lenght = string.len('script_local_version = \'')
+        local small_body = string.sub(p_body, 0, found_string_start_index + 200)
 
-        string.find(output, 'localVer = ')
-        string.sub("Hello Lua user", 7)
+        string_start_index = found_string_start_index + found_string_lenght
 
-        string.lfind
+        local while_counter = found_string_start_index + found_string_lenght
+        while true do
+            util.yield()
 
-        response = true
-    end, 
-    function () 
-        response = true 
-    end) 
+            if (string.sub(small_body, while_counter, while_counter) == '\'') then
+                break
+            end
+
+            string_end_index = while_counter
+            while_counter += 1
+        end
+
+        local script_current_version_string = string.sub(small_body, string_start_index, string_end_index)
+        util.log('#649, script_current_version_string == ' .. tostring(script_current_version_string))
+        script_current_version = tonumber(script_current_version_string)
+        util.log('#650, script_current_version == ' .. tostring(script_current_version))
+
+    end)
 
     async_http.dispatch()
 
     repeat 
         util.yield()
     until response
+
+    -- Update if new version
+    --if script_local_version ~= script_current_version then
+    --    util.toast('New JPEditor version is available, update the lua to get the newest version.')
+
+    --    menu.my_root():action('Update Lua', {''}, '', function (param_click_type, param_effective_issuer) 
+    --        async_http.init('raw.githubusercontent.com','/Prisuhm/JinxScript/main/JinxScript.lua', function (p_body, p_header_fields, p_status_code) 
+    --            local err <const> = select(2, load(p_body))
+
+    --            if err then
+    --                util.toast('Script failed to download. Please try again later. If this continues to happen then manually update via github.') 
+    --                return
+    --            end
+
+    --            local file = io.open(filesystem.scripts_dir() .. SCRIPT_RELPATH, 'wb')
+
+    --            file:write(p_body)
+    --            file:close()
+
+    --            util.toast('Successfully updated JPEditor. Restarting Script... :)')
+    --            util.restart_script()
+    --        end)
+
+    --        async_http.dispatch()
+    --    end)
+    --end
+
+--- ]]
+
+--- Script helpers [[
+
+    -- Required utils
+    util.require_natives('1663599433')
 
     -- Script wide constants
     local max_int <const> = 2147483647
