@@ -49,7 +49,7 @@
 
     -- Updater #JinxScript
     local response = false
-    local localVer = '99.99.999'
+    local localVer = '3.1'
     local currentVer
 
     async_http.init("raw.githubusercontent.com", "/Oraite/JPEditor/main/JPEditor.lua", 
