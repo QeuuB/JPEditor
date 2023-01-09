@@ -60,7 +60,7 @@
     --
 
     --- Script wide functions
-    local functions = {
+    local functions = { 
 
         ---@param p_message string Message to be sent in the console
         ---@param p_notification_method integer Notification via toast: 0, log: 1, both: 2 or both different: 3
