@@ -45,7 +45,7 @@
 --- Update script [[
 
     -- Variables
-    g_script_local_version = '0.1.098'
+    g_script_local_version = '0.1.103'
     g_script_current_version = nil
     g_script_has_new_verion = false
     g_finished_asynchronous_init = false
@@ -53,6 +53,9 @@
     -- Process
     -- Get up to date version number
     async_http.init('raw.githubusercontent.com', '/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
+        -- Yield 100 ms, fsr script is crashing a lot here idk
+        util.yield(100)
+
         local found_string_start_index = string.find(p_body, 'g_script_local_version = \'')
         local found_string_lenght = string.len('g_script_local_version = \'')
         local small_body = string.sub(p_body, 0, found_string_start_index + 200)
