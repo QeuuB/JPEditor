@@ -18,7 +18,7 @@
     local debug_enabled <const> = true
 
     --- Script wide Variables
-    local script_local_version = '0.1.159'
+    local script_local_version = '0.1.162'
 
     --- Script wide Tables
     --
@@ -120,6 +120,7 @@
         async_http.init('raw.githubusercontent.com', '/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
             -- No update available
             if (p_body:contains(script_local_version)) then
+                notification('[ JPEDITOR ]\nWelcome, your script up to date.', 0)
                 return 
             end
         
