@@ -1,44 +1,9 @@
 --[[
 
-    wm29 hash 465894841, weapon_pistolxm3
-    stat? 14170 OR 14171 OR 36670
-    search #15 #16 #17
-    memory.read_int(memory.script_global(262145 + 36670))
-    memory.script_global(262145)
+    I made this little script just to try to mess with stats and globals, 
+    but now I'm also using it to test features for my other script in the future
 
-    candycane hash 1703483498:
-    return 14180 OR 14181 OR 36671
-    
-    weapon_railgunxm3 -22923932:
-    return 14190 OR 14191 OR 36672
-
-    unlock m16
-    weapon_tacticalrifle
-    hash 3520460075
-    memory.write_int(memory.script_global(262145 + 32775), 1)
-
-    mp_weapons.c
-    	case 465894841:
-    		stat = 14164;
-    		stat2 = 14165;
-    	break;
-    -        
-
-    silent_aimbot_root:action('Create', {''}, 'Temp.',
-    function()
-        local lPlayerPos = players.get_position(players.user())
-        util.request_model(4180675781, 2000)
-        local lVehicle = entities.create_vehicle(4180675781, lPlayerPos, math.random(0, 270))
-        util.request_model(1382414087, 2000)
-        PED.CREATE_PED_INSIDE_VEHICLE(lVehicle, PED_TYPE_CIVMALE, 1382414087, -1, true, true)
-    end, nil, nil, COMMANDPERM_USERONLY)
-
-    -- Event tags
-    Modded Event (N6) - PTFX spam
-    Crash Event (E0) - Caused by fatal error, ignore
-    Crash Event (N1) - ?
-    Crash Event (T6) - ?
-    Crash Event (XC) - ?
+    Not distributing.
 
 --]]
 
@@ -53,19 +18,17 @@
     local debug_enabled <const> = true
 
     --- Script wide Variables
-    local script_local_version = '0.1.125'
-    local finished_asynchronous_init = false
+    local script_local_version = '0.1.159'
 
     --- Script wide Tables
     --
 
-    --- Script wide functions
-    local functions = { 
+    --- Script wide functions [[
 
         ---@param p_message string Message to be sent in the console
         ---@param p_notification_method integer Notification via toast: 0, log: 1, both: 2 or both different: 3
         ---@param p_log_exclusive_message? string Message to log if p_notification_method equals 3
-        ['notification'] = function (p_message, p_notification_method, p_log_exclusive_message)
+        function notification (p_message:string, p_notification_method:number, p_log_exclusive_message:string) 
             if (p_message == nil) then return end
             switch (p_notification_method) do
                 case (0):
@@ -84,25 +47,25 @@
                     util.log(p_log_exclusive_message)
                 break
             end
-        end,
+        end
 
         ---@param p_stat string
         ---@param p_int_value integer
-        ['stat_set_int'] = function (p_stat, p_int_value)
-            STATS.STAT_SET_INT(util.joaat(functions.add_mp_index_to_string(p_stat)), p_int_value, true)
-        end,
+        function stat_set_int (p_stat:string, p_int_value:number) 
+            STATS.STAT_SET_INT(util.joaat(add_mp_index_to_string(p_stat)), p_int_value, true)
+        end
 
         ---@param p_stat string
         ---@return integer
-        ['stat_get_int'] = function (p_stat)
+        function stat_get_int (p_stat:string) 
             local integer_pointer = memory.alloc_int()
-            STATS.STAT_GET_INT(util.joaat(functions.add_mp_index_to_string(p_stat)), integer_pointer, -1)
+            STATS.STAT_GET_INT(util.joaat(add_mp_index_to_string(p_stat)), integer_pointer, -1)
 
             return memory.read_int(integer_pointer)
-        end,
+        end
 
         ---@param p_stat string
-        ['stat_has_mpply'] = function (p_stat)
+        function stat_has_mpply (p_stat:string) 
             local stats = {
                 'MP_PLAYING_TIME',
             }
@@ -118,63 +81,56 @@
             else
                 return false
             end
-        end,
-        
+        end
+
         ---@param p_stat string
-        ['add_mp_index_to_string'] = function (p_stat)
-            if not functions.stat_has_mpply(p_stat) then
+        function add_mp_index_to_string (p_stat:string) 
+            if not stat_has_mpply(p_stat) then
                 p_stat = 'MP' .. util.get_char_slot() .. '_' .. p_stat
             end
 
             return p_stat
         end
 
-    }
+        function update_script () 
+            -- Http request
+            async_http.init('raw.githubusercontent.com','/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
+                if select(2, load(p_body)) then
+                    notification('[ JPEDITOR ]\nScript download has failed.\nPlease try again later.\nIf this continues to happen then manually update via github.', 3, '[ JPEDITOR ] Script download has failed. Please try again later. If this continues to happen then manually update via github.') 
+                    return
+                end
+    
+                local file = io.open(filesystem.scripts_dir() .. SCRIPT_RELPATH, 'wb')
+                file:write(p_body)
+                file:close()
+    
+                notification('[ JPEDITOR ]\nSuccessfully updated.\nRestarting script...', 3, '[ JPEDITOR ] Successfully updated.') 
+                util.restart_script()
+            end)
+    
+            -- Http dispatch
+            async_http.dispatch()
+        end
+
+    --- ]]
 
     --- Script updater [[ 
 
-        -- Process
-        -- Get up to date version number
+        -- Check for new version
         async_http.init('raw.githubusercontent.com', '/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
+            -- No update available
             if (p_body:contains(script_local_version)) then
-                finished_asynchronous_init = true
                 return 
             end
         
             -- Here there's a new version
             -- Create update option / action
-            menu.my_root():action('Update Script', {''}, '', function (p_click_type, p_effective_issuer) 
-                async_http.init('raw.githubusercontent.com','/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
-                    if select(2, load(p_body)) then
-                        functions.notification('[ JPEDITOR ]\nScript download has failed.\nPlease try again later.\nIf this continues to happen then manually update via github.', 3, '[ JPEDITOR ] Script download has failed. Please try again later. If this continues to happen then manually update via github.') 
-                        return
-                    end
-        
-                    local file = io.open(filesystem.scripts_dir() .. SCRIPT_RELPATH, 'wb')
-                    file:write(p_body)
-                    file:close()
-        
-                    functions.notification('[ JPEDITOR ]\nSuccessfully updated.\nRestarting script...', 3, '[ JPEDITOR ] Successfully updated.') 
-                    util.restart_script()
-                end)
-        
-                -- Dispatch
-                async_http.dispatch()
-            end, nil, nil, COMMANDPERM_USERONLY)
-
-            functions.notification('[ JPEDITOR ]\nThere\'s a new version available.\nUpdate the script to get the newest version.', 3, '[ JPEDITOR ] There\'s a new version available. Update the script to get the newest version.')
-            
-            finished_asynchronous_init = true
-            return
+            menu.my_root():action('Update Script', {''}, '', |p_click_type, p_effective_issuer| -> update_script(), nil, nil, COMMANDPERM_USERONLY)
+            notification('[ JPEDITOR ]\nThere\'s a new version available.\nUpdate the script to get the newest version.', 3, '[ JPEDITOR ] There\'s a new version available. Update the script to get the newest version.')
         end)
     
-        -- Dispatch
+        -- Http dispatch
         async_http.dispatch()
-    
-        -- Loop here while asynchronous http init
-        repeat 
-            util.yield()
-        until finished_asynchronous_init
 
     --- ]]
 
@@ -198,7 +154,7 @@
         function (param_click_type, param_effective_issuer) 
             async_http.init('raw.githubusercontent.com','/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
                 if select(2, load(p_body)) then
-                    functions.notification('[ JPEDITOR ]\nScript download has failed.\nPlease try again later.\nIf this continues to happen then manually update via github.', 3, '[ JPEDITOR ] Script download has failed. Please try again later. If this continues to happen then manually update via github.') 
+                    notification('[ JPEDITOR ]\nScript download has failed.\nPlease try again later.\nIf this continues to happen then manually update via github.', 3, '[ JPEDITOR ] Script download has failed. Please try again later. If this continues to happen then manually update via github.') 
                     return
                 end
 
@@ -206,7 +162,7 @@
                 file:write(p_body)
                 file:close()
 
-                functions.notification('[ JPEDITOR ]\nSuccessfully updated.\nRestarting script...', 3, '[ JPEDITOR ] Successfully updated.') 
+                notification('[ JPEDITOR ]\nSuccessfully updated.\nRestarting script...', 3, '[ JPEDITOR ] Successfully updated.') 
                 util.restart_script()
             end)
 
@@ -228,11 +184,11 @@
         local joaat_int = util.joaat(param_provided_args)
 
         if (joaat_int == nil or joaat_int == 0) then
-            functions.notification('[JPEditor] Failed', 3, '[JPEditor] Successfuly failed getting \'' .. param_provided_args .. '\' hash :(')
+            notification('[JPEditor] Failed', 3, '[JPEditor] Successfuly failed getting \'' .. param_provided_args .. '\' hash :(')
             return
         end
 
-        functions.notification('[JPEditor] Success', 3, '[JPEditor] Success getting \'' .. param_provided_args .. '\' hash: ' .. joaat_int)
+        notification('[JPEditor] Success', 3, '[JPEditor] Success getting \'' .. param_provided_args .. '\' hash: ' .. joaat_int)
     end, nil, COMMANDPERM_USERONLY)
 
     menu.my_root():action('Reverse Joaat', {'reversejoaat'}, 'Returns an empty string if the given hash is not found in Stand\'s dictionaries.',
@@ -243,11 +199,11 @@
         local joaat_string = util.reverse_joaat(param_provided_args)
 
         if (joaat_string == nil or joaat_string == '') then
-            functions.notification('[JPEditor] Failed', 3, '[JPEditor] Successfuly failed getting \'' .. param_provided_args .. '\' name :(')
+            notification('[JPEditor] Failed', 3, '[JPEditor] Successfuly failed getting \'' .. param_provided_args .. '\' name :(')
             return
         end
 
-        functions.notification('[JPEditor] Success', 3, '[JPEditor] Success getting \'' .. param_provided_args .. '\' name: ' .. joaat_string)
+        notification('[JPEditor] Success', 3, '[JPEditor] Success getting \'' .. param_provided_args .. '\' name: ' .. joaat_string)
     end, nil, COMMANDPERM_USERONLY)
 
     menu.my_root():divider('Settings')
@@ -273,8 +229,8 @@
 
         edit_stat_root:action('Execute', {''}, '',
         function (param_click_type, param_effective_issuer)
-            functions.stat_set_int(stat_set_int_name, stat_set_int_value)
-            functions.notification('Success', 3, '#4241 Set int to stat successfully')
+            stat_set_int(stat_set_int_name, stat_set_int_value)
+            notification('Success', 3, '#4241 Set int to stat successfully')
         end, nil, nil, COMMANDPERM_USERONLY)
 
         edit_stat_root:divider('Stat Get Int')
@@ -288,8 +244,8 @@
 
         edit_stat_root:action('Execute', {''}, '',
         function (param_click_type, param_effective_issuer)
-            local stat_get_int_value = functions.stat_get_int(stat_get_int_name)
-            functions.notification('Success', 3, '#4041, Success, stat_get_int_value == ' .. stat_get_int_value)
+            local stat_get_int_value = stat_get_int(stat_get_int_name)
+            notification('Success', 3, '#4041, Success, stat_get_int_value == ' .. stat_get_int_value)
         end, nil, nil, COMMANDPERM_USERONLY)
 
     --- ]]
