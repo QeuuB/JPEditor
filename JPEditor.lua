@@ -1,3 +1,60 @@
+--- Update script [[
+
+    -- Variables
+    local script_local_version = '0.1.107'
+    local script_current_version = nil
+    local script_has_new_verion = false
+    local finished_asynchronous_init = false
+
+    -- Process
+    -- Get up to date version number
+    async_http.init('raw.githubusercontent.com', '/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
+        -- Yield 100 ms, fsr script is crashing a lot here idk
+        util.yield(100)
+
+        local found_string_start_index = string.find(p_body, 'script_local_version = \'')
+        local found_string_lenght = string.len('script_local_version = \'')
+        local small_body = string.sub(p_body, 0, found_string_start_index + 100)
+        local string_start_index = found_string_start_index + found_string_lenght
+        local string_end_index = 0
+        local while_counter = string_start_index
+
+        while (true) do
+            util.yield()
+
+            if (string.sub(small_body, while_counter, while_counter) == '\'') then
+                break
+            end
+
+            string_end_index = while_counter
+            while_counter += 1
+        end
+
+        script_current_version = string.sub(small_body, string_start_index, string_end_index)
+
+        if (script_local_version == script_current_version) then 
+            finished_asynchronous_init = true 
+            return 
+        end
+
+        -- Here there's a new version
+        script_has_new_verion = true
+        finished_asynchronous_init = true 
+        util.toast('[ JPEDITOR ]\nThere\'s a new version available.\nUpdate the script to get the newest version.')
+        util.log('[ JPEDITOR ] There\'s a new version available. Update the script to get the newest version.')
+        return
+    end)
+
+    -- Dispatch
+    async_http.dispatch()
+
+    -- Loop here while asynchronous http init
+    repeat 
+        util.yield()
+    until finished_asynchronous_init
+
+--- ]]
+
 --[[
 
     wm29 hash 465894841, weapon_pistolxm3
@@ -41,63 +98,6 @@
     Crash Event (XC) - ?
 
 --]]
-
---- Update script [[
-
-    -- Variables
-    g_script_local_version = '0.1.103'
-    g_script_current_version = nil
-    g_script_has_new_verion = false
-    g_finished_asynchronous_init = false
-
-    -- Process
-    -- Get up to date version number
-    async_http.init('raw.githubusercontent.com', '/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
-        -- Yield 100 ms, fsr script is crashing a lot here idk
-        util.yield(100)
-
-        local found_string_start_index = string.find(p_body, 'g_script_local_version = \'')
-        local found_string_lenght = string.len('g_script_local_version = \'')
-        local small_body = string.sub(p_body, 0, found_string_start_index + 200)
-        local string_start_index = found_string_start_index + found_string_lenght
-        local string_end_index = 0
-        local while_counter = string_start_index
-
-        while (true) do
-            util.yield()
-
-            if (string.sub(small_body, while_counter, while_counter) == '\'') then
-                break
-            end
-
-            string_end_index = while_counter
-            while_counter += 1
-        end
-
-        g_script_current_version = string.sub(small_body, string_start_index, string_end_index)
-
-        if (g_script_local_version == g_script_current_version) then 
-            g_finished_asynchronous_init = true 
-            return 
-        end
-
-        -- Here there's a new version
-        g_script_has_new_verion = true
-        g_finished_asynchronous_init = true 
-        util.toast('[ JPEDITOR ]\nThere\'s a new version available.\nUpdate the script to get the newest version.')
-        util.log('[ JPEDITOR ] There\'s a new version available. Update the script to get the newest version.')
-        return
-    end)
-
-    -- Dispatch
-    async_http.dispatch()
-
-    -- Loop here while asynchronous http init
-    repeat 
-        util.yield()
-    until g_finished_asynchronous_init
-
---- ]]
 
 --- Script helpers [[
 
@@ -202,7 +202,7 @@
         util.restart_script()
     end, nil, nil, COMMANDPERM_USERONLY)
 
-    if (g_script_has_new_verion) then 
+    if (script_has_new_verion) then 
         menu.my_root():action('Update Script', {''}, '', 
         function (param_click_type, param_effective_issuer) 
             async_http.init('raw.githubusercontent.com','/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
