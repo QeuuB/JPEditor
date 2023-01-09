@@ -45,27 +45,23 @@
 --- Update script [[
 
     -- Variables
-    local script_local_version = '90.12.300'
-    local script_current_version
+    local g_script_local_version = '90.12.531'
+    local g_script_current_version = nil
+    local g_script_has_new_verion = false
 
     -- Process
     -- Get up to date version number
     async_http.init('raw.githubusercontent.com', '/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
-
-        -- Get current version in github script
-        local string_start_index = 0
-        local string_end_index = 0
-
-        local found_string_start_index = string.find(p_body, 'script_local_version = \'')
-        local found_string_lenght = string.len('script_local_version = \'')
+        local found_string_start_index = string.find(p_body, 'g_script_local_version = \'')
+        local found_string_lenght = string.len('g_script_local_version = \'')
         local small_body = string.sub(p_body, 0, found_string_start_index + 200)
+        local string_start_index = found_string_start_index + found_string_lenght
+        local string_end_index = 0
+        local while_counter = string_start_index
 
-        string_start_index = found_string_start_index + found_string_lenght
-
-        local while_counter = found_string_start_index + found_string_lenght
-        while true do
+        while (true) do
             util.yield()
-
+            
             if (string.sub(small_body, while_counter, while_counter) == '\'') then
                 break
             end
@@ -74,44 +70,18 @@
             while_counter += 1
         end
 
-        local script_current_version_string = string.sub(small_body, string_start_index, string_end_index)
-        util.log('#649, script_current_version_string == ' .. tostring(script_current_version_string))
-        script_current_version = tonumber(script_current_version_string)
-        util.log('#650, script_current_version == ' .. tostring(script_current_version))
+        g_script_current_version = string.sub(small_body, string_start_index, string_end_index)
+        util.log('#649, g_script_current_version == ' .. tostring(g_script_current_version)) -- TEMP
 
+        if (g_script_local_version == g_script_current_version) then return end
+
+        -- Here there's a new version
+        g_script_has_new_verion = true
+        functions.notification('[ JPSCRIPT ]\nThere\'s a new version available.\nUpdate the script to get the newest version.', 1)
     end)
 
+    -- Dispatch
     async_http.dispatch()
-
-    repeat 
-        util.yield()
-    until response
-
-    -- Update if new version
-    --if script_local_version ~= script_current_version then
-    --    util.toast('New JPEditor version is available, update the lua to get the newest version.')
-
-    --    menu.my_root():action('Update Lua', {''}, '', function (param_click_type, param_effective_issuer) 
-    --        async_http.init('raw.githubusercontent.com','/Prisuhm/JinxScript/main/JinxScript.lua', function (p_body, p_header_fields, p_status_code) 
-    --            local err <const> = select(2, load(p_body))
-
-    --            if err then
-    --                util.toast('Script failed to download. Please try again later. If this continues to happen then manually update via github.') 
-    --                return
-    --            end
-
-    --            local file = io.open(filesystem.scripts_dir() .. SCRIPT_RELPATH, 'wb')
-
-    --            file:write(p_body)
-    --            file:close()
-
-    --            util.toast('Successfully updated JPEditor. Restarting Script... :)')
-    --            util.restart_script()
-    --        end)
-
-    --        async_http.dispatch()
-    --    end)
-    --end
 
 --- ]]
 
@@ -213,10 +183,29 @@
 
 --- My root [[
 
-    menu.my_root():action('Restart Script', {''}, '',
-    function (param_click_type, param_effective_issuer)
+    menu.my_root():action('Restart Script', {''}, '', 
+    function (param_click_type, param_effective_issuer) 
         util.restart_script()
     end, nil, nil, COMMANDPERM_USERONLY)
+
+    if (g_script_has_new_verion) then 
+        menu.my_root():action('Update Script', {''}, '', 
+        function (param_click_type, param_effective_issuer) 
+            async_http.init('raw.githubusercontent.com','/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
+                if select(2, load(p_body)) then
+                    util.toast('Script failed to download. Please try again later. If this continues to happen then manually update via github.') 
+                    return
+                end
+                local file = io.open(filesystem.scripts_dir() .. SCRIPT_RELPATH, 'wb')
+                file:write(p_body)
+                file:close()
+                util.toast('Successfully updated JPEditor. Restarting Script... :)')
+                util.restart_script()
+            end)
+            -- Dispatch
+            async_http.dispatch()
+        end)
+    end
 
     menu.my_root():divider('JPEditor')
 
