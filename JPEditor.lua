@@ -1,60 +1,3 @@
---- Update script [[
-
-    -- Variables
-    local script_local_version = '0.1.107'
-    local script_current_version = nil
-    local script_has_new_verion = false
-    local finished_asynchronous_init = false
-
-    -- Process
-    -- Get up to date version number
-    async_http.init('raw.githubusercontent.com', '/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
-        -- Yield 100 ms, fsr script is crashing a lot here idk
-        util.yield(100)
-
-        local found_string_start_index = string.find(p_body, 'script_local_version = \'')
-        local found_string_lenght = string.len('script_local_version = \'')
-        local small_body = string.sub(p_body, 0, found_string_start_index + 100)
-        local string_start_index = found_string_start_index + found_string_lenght
-        local string_end_index = 0
-        local while_counter = string_start_index
-
-        while (true) do
-            util.yield()
-
-            if (string.sub(small_body, while_counter, while_counter) == '\'') then
-                break
-            end
-
-            string_end_index = while_counter
-            while_counter += 1
-        end
-
-        script_current_version = string.sub(small_body, string_start_index, string_end_index)
-
-        if (script_local_version == script_current_version) then 
-            finished_asynchronous_init = true 
-            return 
-        end
-
-        -- Here there's a new version
-        script_has_new_verion = true
-        finished_asynchronous_init = true 
-        util.toast('[ JPEDITOR ]\nThere\'s a new version available.\nUpdate the script to get the newest version.')
-        util.log('[ JPEDITOR ] There\'s a new version available. Update the script to get the newest version.')
-        return
-    end)
-
-    -- Dispatch
-    async_http.dispatch()
-
-    -- Loop here while asynchronous http init
-    repeat 
-        util.yield()
-    until finished_asynchronous_init
-
---- ]]
-
 --[[
 
     wm29 hash 465894841, weapon_pistolxm3
@@ -101,21 +44,22 @@
 
 --- Script helpers [[
 
-    -- Required utils
+    --- Required utils
     util.require_natives('1663599433')
 
-    -- Script wide constants
+    --- Script wide constants
     local max_int <const> = 2147483647
     local min_int <const> = -2147483647
     local debug_enabled <const> = true
 
-    -- Script wide Variables
+    --- Script wide Variables
+    local script_local_version = '0.1.125'
+    local finished_asynchronous_init = false
+
+    --- Script wide Tables
     --
 
-    -- Script wide Tables
-    --
-
-    -- Script wide functions
+    --- Script wide functions
     local functions = {
 
         ---@param p_message string Message to be sent in the console
@@ -186,6 +130,53 @@
         end
 
     }
+
+    --- Script updater [[ 
+
+        -- Process
+        -- Get up to date version number
+        async_http.init('raw.githubusercontent.com', '/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
+            if (p_body:contains(script_local_version)) then
+                finished_asynchronous_init = true
+                return 
+            end
+        
+            -- Here there's a new version
+            -- Create update option / action
+            menu.my_root():action('Update Script', {''}, '', function (p_click_type, p_effective_issuer) 
+                async_http.init('raw.githubusercontent.com','/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
+                    if select(2, load(p_body)) then
+                        functions.notification('[ JPEDITOR ]\nScript download has failed.\nPlease try again later.\nIf this continues to happen then manually update via github.', 3, '[ JPEDITOR ] Script download has failed. Please try again later. If this continues to happen then manually update via github.') 
+                        return
+                    end
+        
+                    local file = io.open(filesystem.scripts_dir() .. SCRIPT_RELPATH, 'wb')
+                    file:write(p_body)
+                    file:close()
+        
+                    functions.notification('[ JPEDITOR ]\nSuccessfully updated.\nRestarting script...', 3, '[ JPEDITOR ] Successfully updated.') 
+                    util.restart_script()
+                end)
+        
+                -- Dispatch
+                async_http.dispatch()
+            end, nil, nil, COMMANDPERM_USERONLY)
+
+            functions.notification('[ JPEDITOR ]\nThere\'s a new version available.\nUpdate the script to get the newest version.', 3, '[ JPEDITOR ] There\'s a new version available. Update the script to get the newest version.')
+            
+            finished_asynchronous_init = true
+            return
+        end)
+    
+        -- Dispatch
+        async_http.dispatch()
+    
+        -- Loop here while asynchronous http init
+        repeat 
+            util.yield()
+        until finished_asynchronous_init
+
+    --- ]]
 
 --- ]]
 
