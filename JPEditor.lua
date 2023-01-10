@@ -18,7 +18,7 @@
     local debug_enabled <const> = true
 
     --- Script wide Variables
-    local script_local_version = '0.1.170.1'
+    local script_local_version = '0.1.173'
     local script_current_version = nil
     local finished_asynchronous_init = false
 
@@ -119,18 +119,10 @@
     --- Script updater [[ 
 
         -- Check for new version
-        async_http.init('raw.githubusercontent.com', '/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
-            -- No update available
-            if (p_body:contains(script_local_version)) then
-                notification('[ JPEDITOR ]\nWelcome, your script up to date.', 0)
-                finished_asynchronous_init = true
-                return 
-            end
-        
-            -- Here there's a new version
+        async_http.init('raw.githubusercontent.com', '/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code)         
+            -- Get github's version
             local found_string_start_index = string.find(p_body, 'script_local_version = \'')
             local found_string_lenght = string.len('script_local_version = \'')
-            local small_body = string.sub(p_body, 0, found_string_start_index + 100)
             local string_start_index = found_string_start_index + found_string_lenght
             local string_end_index = 0
             local while_counter = string_start_index
@@ -138,7 +130,7 @@
             while (true) do
                 util.yield()
 
-                if (string.sub(small_body, while_counter, while_counter) == '\'') then
+                if (string.sub(p_body, while_counter, while_counter) == '\'') then
                     break
                 end
 
@@ -146,11 +138,19 @@
                 while_counter += 1
             end
 
-            script_current_version = string.sub(small_body, string_start_index, string_end_index)
+            script_current_version = string.sub(p_body, string_start_index, string_end_index)
             util.log('#1501, script_current_version == ' .. script_current_version)
 
+            -- There's not a new verion
+            if (script_local_version == script_current_version) then
+                notification('[ JPEDITOR ]\nWelcome, your script up to date.', 0)
+                finished_asynchronous_init = true
+                return
+            end
+
+            -- There's a new version
             -- Create update option / action
-            menu.my_root():action('Update Script', {''}, '', |p_click_type, p_effective_issuer| -> update_script(), nil, nil, COMMANDPERM_USERONLY)
+            menu.my_root():action('Update Script', {''}, 'Update your script version: ' .. script_local_version .. '\nNew version: ' .. script_current_version, |p_click_type, p_effective_issuer| -> update_script(), nil, nil, COMMANDPERM_USERONLY)
             notification('[ JPEDITOR ]\nThere\'s a new version available.\nUpdate the script to get the newest version.', 3, '[ JPEDITOR ] There\'s a new version available. Update the script to get the newest version.')
             finished_asynchronous_init = true
 
