@@ -18,7 +18,7 @@
     local debug_enabled <const> = true
 
     --- Script wide Variables
-    local script_local_version = '0.1.173'
+    local script_local_version = '0.1.173.1'
     local script_current_version = nil
     local finished_asynchronous_init = false
 
