@@ -18,7 +18,7 @@
     local debug_enabled <const> = true
 
     --- Script wide Variables
-    local script_local_version = '0.1.173.1'
+    local script_local_version = '0.1.179'
     local script_current_version = nil
     local finished_asynchronous_init = false
 
@@ -129,11 +129,9 @@
 
             while (true) do
                 util.yield()
-
                 if (string.sub(p_body, while_counter, while_counter) == '\'') then
                     break
                 end
-
                 string_end_index = while_counter
                 while_counter += 1
             end
@@ -150,7 +148,7 @@
 
             -- There's a new version
             -- Create update option / action
-            menu.my_root():action('Update Script', {''}, 'Update your script version: ' .. script_local_version .. '\nNew version: ' .. script_current_version, |p_click_type, p_effective_issuer| -> update_script(), nil, nil, COMMANDPERM_USERONLY)
+            menu.my_root():action('Update Script', {''}, 'Update your script\nActual version: ' .. script_local_version .. '\nNew version: ' .. script_current_version, |p_click_type, p_effective_issuer| -> update_script(), nil, nil, COMMANDPERM_USERONLY)
             notification('[ JPEDITOR ]\nThere\'s a new version available.\nUpdate the script to get the newest version.', 3, '[ JPEDITOR ] There\'s a new version available. Update the script to get the newest version.')
             finished_asynchronous_init = true
 
@@ -182,7 +180,7 @@
         util.restart_script()
     end, nil, nil, COMMANDPERM_USERONLY)
 
-    menu.my_root():divider('JPEditor')
+    menu.my_root():divider('JPEditor ' .. script_local_version)
 
     local edit_stat_root <const> = menu.my_root():list('Edit Stat', {''}, '', nil, nil, nil)
     local edit_global_root <const> = menu.my_root():list('Edit Global', {''}, '', nil, nil, nil)
