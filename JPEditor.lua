@@ -18,7 +18,7 @@
     local debug_enabled <const> = true
 
     --- Script wide Variables
-    local script_local_version = '0.1.179'
+    local script_local_version = '0.1.179.2'
     local script_current_version = nil
     local finished_asynchronous_init = false
 
@@ -137,7 +137,6 @@
             end
 
             script_current_version = string.sub(p_body, string_start_index, string_end_index)
-            util.log('#1501, script_current_version == ' .. script_current_version)
 
             -- There's not a new verion
             if (script_local_version == script_current_version) then
