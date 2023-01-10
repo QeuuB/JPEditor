@@ -18,7 +18,7 @@
     local debug_enabled <const> = true
 
     --- Script wide Variables
-    local script_local_version = '0.1.180'
+    local script_local_version = '0.1.180.2'
     local script_current_version = nil
     local finished_asynchronous_init = false
 
@@ -131,6 +131,7 @@
             if (found_string_start_index == -1 or found_string_lenght == -1) then
                 notification('[ JPEDITOR ]\nCritical error with the auto updater.\nPlease update manually.', 3, '[ JPEDITOR ] Critical error with the auto updater. Please update manually.')
                 -- TODO: add update option instead of this bullshit ^^^
+                finished_asynchronous_init = true
                 return
             end
 
