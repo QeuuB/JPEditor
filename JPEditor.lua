@@ -18,7 +18,7 @@
     local debug_enabled <const> = true
 
     --- Script wide Variables
-    local script_local_version = '0.1.179.2'
+    local script_local_version = '0.1.180'
     local script_current_version = nil
     local finished_asynchronous_init = false
 
@@ -30,7 +30,7 @@
         ---@param p_message string Message to be sent in the console
         ---@param p_notification_method integer Notification via toast: 0, log: 1, both: 2 or both different: 3
         ---@param p_log_exclusive_message? string Message to log if p_notification_method equals 3
-        function notification (p_message:string, p_notification_method:number, p_log_exclusive_message:string) 
+        local function notification (p_message:string, p_notification_method:number, p_log_exclusive_message:string) 
             if (p_message == nil) then return end
             switch (p_notification_method) do
                 case (0):
@@ -53,13 +53,13 @@
 
         ---@param p_stat string
         ---@param p_int_value integer
-        function stat_set_int (p_stat:string, p_int_value:number) 
+        local function stat_set_int (p_stat:string, p_int_value:number) 
             STATS.STAT_SET_INT(util.joaat(add_mp_index_to_string(p_stat)), p_int_value, true)
         end
 
         ---@param p_stat string
         ---@return integer
-        function stat_get_int (p_stat:string) 
+        local function stat_get_int (p_stat:string) 
             local integer_pointer = memory.alloc_int()
             STATS.STAT_GET_INT(util.joaat(add_mp_index_to_string(p_stat)), integer_pointer, -1)
 
@@ -67,7 +67,7 @@
         end
 
         ---@param p_stat string
-        function stat_has_mpply (p_stat:string) 
+        local function stat_has_mpply (p_stat:string) 
             local stats = {
                 'MP_PLAYING_TIME',
             }
@@ -86,7 +86,7 @@
         end
 
         ---@param p_stat string
-        function add_mp_index_to_string (p_stat:string) 
+        local function add_mp_index_to_string (p_stat:string) 
             if not stat_has_mpply(p_stat) then
                 p_stat = 'MP' .. util.get_char_slot() .. '_' .. p_stat
             end
@@ -94,7 +94,7 @@
             return p_stat
         end
 
-        function update_script () 
+        local function update_script () 
             -- Http request
             async_http.init('raw.githubusercontent.com','/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code) 
                 if select(2, load(p_body)) then
@@ -121,11 +121,18 @@
         -- Check for new version
         async_http.init('raw.githubusercontent.com', '/Oraite/JPEditor/main/JPEditor.lua', function (p_body, p_header_fields, p_status_code)         
             -- Get github's version
-            local found_string_start_index = string.find(p_body, 'script_local_version = \'')
-            local found_string_lenght = string.len('script_local_version = \'')
+            local found_string_start_index = string.find(p_body, 'script_local_version = \'') ?? -1
+            local found_string_lenght = string.len('script_local_version = \'') ?? -1
             local string_start_index = found_string_start_index + found_string_lenght
             local string_end_index = 0
             local while_counter = string_start_index
+
+            -- Critical error that happens when i'm dumb and change the variable name
+            if (found_string_start_index == -1 or found_string_lenght == -1) then
+                notification('[ JPEDITOR ]\nCritical error with the auto updater.\nPlease update manually.', 3, '[ JPEDITOR ] Critical error with the auto updater. Please update manually.')
+                -- TODO: add update option instead of this bullshit ^^^
+                return
+            end
 
             while (true) do
                 util.yield()
