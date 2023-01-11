@@ -18,7 +18,7 @@
     local debug_enabled <const> = true
 
     --- Script wide Variables
-    local script_local_version = '0.1.180.2'
+    local script_local_version = '0.1.181'
     local script_current_version = nil
     local finished_asynchronous_init = false
 
@@ -127,10 +127,10 @@
             local string_end_index = 0
             local while_counter = string_start_index
 
-            -- Critical error that happens when i'm dumb and change the variable name
+            -- Error that happens when i'm dumb and change the variable name
             if (found_string_start_index == -1 or found_string_lenght == -1) then
-                notification('[ JPEDITOR ]\nCritical error with the auto updater.\nPlease update manually.', 3, '[ JPEDITOR ] Critical error with the auto updater. Please update manually.')
-                -- TODO: add update option instead of this bullshit ^^^
+                notification('[ JPEDITOR ]\nError with the auto updater.\nPlease update manually.', 3, '[ JPEDITOR ] Error with the auto updater. Please update manually.')
+                menu.my_root():action('Update Script', {''}, 'Try to update here.\nIf this action fails, please update manually.', nil, nil, COMMANDPERM_USERONLY)
                 finished_asynchronous_init = true
                 return
             end
@@ -155,7 +155,7 @@
 
             -- There's a new version
             -- Create update option / action
-            menu.my_root():action('Update Script', {''}, 'Update your script\nActual version: ' .. script_local_version .. '\nNew version: ' .. script_current_version, |p_click_type, p_effective_issuer| -> update_script(), nil, nil, COMMANDPERM_USERONLY)
+            menu.my_root():action('Update Script', {''}, 'Update your script\nActual version: ' .. script_local_version .. '\nNew version: ' .. script_current_version, update_script(), nil, nil, COMMANDPERM_USERONLY)
             notification('[ JPEDITOR ]\nThere\'s a new version available.\nUpdate the script to get the newest version.', 3, '[ JPEDITOR ] There\'s a new version available. Update the script to get the newest version.')
             finished_asynchronous_init = true
 
