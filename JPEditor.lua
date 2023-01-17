@@ -9,8 +9,14 @@
 
 --- Script helpers [[
 
-    --- Required utils
-    util.require_natives('1663599433')
+    --- Natives [[
+
+        local NATIVES = {
+            --[[ _4983 ]] ["STAT_SET_INT"] = function(...) return native_invoker.uno_bool(0xB3271D7AB655B441,...) end,
+            --[[ _4993 ]] ["STAT_GET_INT"] = function(...) return native_invoker.uno_bool(0x767FBC2AC802EF3D,...) end,
+        }
+
+    --- ]]
 
     --- Script wide constants
     local max_int <const> = 2147483647
@@ -54,14 +60,14 @@
         ---@param p_stat string
         ---@param p_int_value integer
         local function stat_set_int (p_stat:string, p_int_value:number) 
-            STATS.STAT_SET_INT(util.joaat(add_mp_index_to_string(p_stat)), p_int_value, true)
+            NATIVES.STAT_SET_INT(util.joaat(add_mp_index_to_string(p_stat)), p_int_value, true)
         end
 
         ---@param p_stat string
         ---@return integer
         local function stat_get_int (p_stat:string) 
             local integer_pointer = memory.alloc_int()
-            STATS.STAT_GET_INT(util.joaat(add_mp_index_to_string(p_stat)), integer_pointer, -1)
+            NATIVES.STAT_GET_INT(util.joaat(add_mp_index_to_string(p_stat)), integer_pointer, -1)
 
             return memory.read_int(integer_pointer)
         end
