@@ -23,8 +23,8 @@
     local min_int <const> = -2147483647
     local debug_enabled <const> = true
 
-    --- Script wide goofy ah variables 
-    local script_local_version = '0.1.200.f2'
+    --- Script wide variables 
+    local script_local_version = '0.1.201'
     local script_current_version = nil
     local finished_asynchronous_init = false
 
@@ -161,11 +161,7 @@
 
             -- There's a new version
             -- Create update option / action
-            --menu.my_root():action('Update Script', {''}, 'Update your script\nActual version: ' .. script_local_version .. '\nNew version: ' .. script_current_version, update_script(), nil, nil, COMMANDPERM_USERONLY)
-            menu.action(menu.my_root(), 'Update Script', {''}, 'Update your script\nActual version: ' .. script_local_version .. '\nNew version: ' .. script_current_version, 
-            function()
-                update_script()
-            end, nil, nil, COMMANDPERM_USERONLY)
+            menu.my_root():action('Update Script', {''}, 'Update your script\nActual version: ' .. script_local_version .. '\nNew version: ' .. script_current_version, || -> update_script(), nil, nil, COMMANDPERM_USERONLY)
             notification('[ JPEDITOR ]\nThere\'s a new version available.\nUpdate the script to get the newest version.', 3, '[ JPEDITOR ] There\'s a new version available. Update the script to get the newest version.')
             finished_asynchronous_init = true
 
