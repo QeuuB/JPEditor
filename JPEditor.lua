@@ -23,8 +23,8 @@
     local min_int <const> = -2147483647
     local debug_enabled <const> = true
 
-    --- Script wide Variables
-    local script_local_version = '0.1.190'
+    --- Script wide goofy ah variables 
+    local script_local_version = '0.1.200'
     local script_current_version = nil
     local finished_asynchronous_init = false
 
